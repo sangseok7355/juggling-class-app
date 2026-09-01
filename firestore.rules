@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && request.auth.token.email == 'sangseok7355@gmail.com';
+    }
+
+    match /students/{studentId} {
+      allow create: if signedIn()
+        && request.auth.uid == studentId
+        && request.resource.data.authUid == request.auth.uid;
+      allow get, update: if isTeacher()
+        || (signedIn() && resource.data.authUid == request.auth.uid);
+      allow list, delete: if isTeacher();
+    }
+  }
+}
