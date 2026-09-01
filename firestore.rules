@@ -2,21 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function isTeacher() {
-      return signedIn() && request.auth.token.email == 'sangseok7355@gmail.com';
+    function teacherSignedIn() { return signedIn() && request.auth.token.email != null; }
+
+    match /teachers/{teacherId} {
+      allow read, create, update: if teacherSignedIn() && request.auth.uid == teacherId;
+      allow delete: if false;
+      match /classes/{classId} {
+        allow read, write: if teacherSignedIn() && request.auth.uid == teacherId;
+        match /students/{studentId} {
+          allow create: if signedIn()
+            && request.auth.uid == studentId
+            && request.resource.data.authUid == request.auth.uid
+            && request.resource.data.teacherUid == teacherId
+            && request.resource.data.classId == classId
+            && get(/databases/$(database)/documents/classCodes/$(request.resource.data.classCode)).data.teacherUid == teacherId
+            && get(/databases/$(database)/documents/classCodes/$(request.resource.data.classCode)).data.classId == classId;
+          allow get: if (teacherSignedIn() && request.auth.uid == teacherId)
+            || (signedIn() && request.auth.uid == studentId);
+          allow update: if (teacherSignedIn() && request.auth.uid == teacherId)
+            || (signedIn() && request.auth.uid == studentId
+              && resource.data.authUid == request.auth.uid
+              && request.resource.data.authUid == request.auth.uid
+              && request.resource.data.teacherUid == resource.data.teacherUid
+              && request.resource.data.classId == resource.data.classId);
+          allow list, delete: if teacherSignedIn() && request.auth.uid == teacherId;
+        }
+      }
     }
 
-    match /students/{studentId} {
-      allow create: if signedIn()
-        && request.auth.uid == studentId
-        && request.resource.data.authUid == request.auth.uid;
-      allow get: if isTeacher()
-        || (signedIn() && request.auth.uid == studentId);
-      allow update: if isTeacher()
-        || (signedIn() && request.auth.uid == studentId
-          && resource.data.authUid == request.auth.uid
-          && request.resource.data.authUid == request.auth.uid);
-      allow list, delete: if isTeacher();
+    match /classCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if teacherSignedIn() && request.resource.data.teacherUid == request.auth.uid;
+      allow update, delete: if teacherSignedIn() && resource.data.teacherUid == request.auth.uid;
     }
   }
 }
