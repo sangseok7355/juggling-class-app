@@ -12,8 +12,9 @@
   <section id="login-view" class="card">
     <div style="text-align:center">
       <h1>🤹 집중력up! 저글링수업</h1>
-      <p class="muted">학생 정보는 이 PC 브라우저에만 저장됩니다. · 성장기록 v3</p>
+      <p class="muted">선생님이 알려준 학급 코드로 참여하세요. · 교사별 독립 성장기록</p>
     </div>
+    <input id="class-code" placeholder="학급 코드 6자리" maxlength="6" style="text-transform:uppercase;font-weight:800;text-align:center;letter-spacing:.16em">
     <div class="grid login-grid">
       <input id="grade" placeholder="학년">
       <input id="classNum" placeholder="반">
@@ -114,12 +115,24 @@
   <section id="teacher-view" class="hidden">
     <div class="card">
       <div class="topbar"><h1>📊 교사 대시보드</h1><button id="student-mode-button" class="btn gray">학생 모드</button></div>
-      <div class="notice">학생 데이터는 현재 이 브라우저에 저장됩니다. 컴퓨터 변경 전에는 반드시 백업하세요.</div>
+      <div id="teacher-account" class="notice">Google 계정으로 로그인했습니다. 각 선생님은 자신의 학급과 학생만 볼 수 있습니다.</div>
+      <h3 style="margin-top:18px">학급 만들기</h3>
+      <div class="grid teacher-class-grid">
+        <input id="new-class-name" placeholder="학급 이름 (예: 1학년 3반)">
+        <input id="new-class-grade" placeholder="학년">
+        <input id="new-class-num" placeholder="반">
+        <button id="create-class-button" class="btn green">학급 코드 만들기</button>
+      </div>
+      <div id="class-list" class="class-list"></div>
+      <div id="class-share-panel" class="notice hidden">
+        <b>학생 참여 주소</b>
+        <div class="share-row"><input id="student-link" readonly><button id="copy-link-button" class="btn primary">주소 복사</button></div>
+      </div>
       <div class="tools">
         <button id="backup-button" class="btn primary">백업 파일 저장</button>
         <label class="btn gray" style="cursor:pointer">백업 복원<input id="restore-input" type="file" accept="application/json" class="hidden"></label>
       </div>
-      <div class="scroll"><table class="dash"><thead><tr><th>학번-이름</th><th>1단계</th><th>2단계</th><th>3단계</th><th>최고기록</th><th>핵심가치</th><th>관리</th></tr></thead><tbody id="dashboard-body"></tbody></table></div>
+      <div class="scroll"><table class="dash"><thead><tr><th>학번-이름</th><th>1단계</th><th>2단계</th><th>3단계</th><th>최고기록</th><th>핵심가치</th><th>관리</th></tr></thead><tbody id="dashboard-body"><tr><td colspan="7">학급을 만들거나 선택해주세요.</td></tr></tbody></table></div>
     </div>
   </section>
 </main>
