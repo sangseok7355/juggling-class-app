@@ -1,14 +1,31 @@
 const STORAGE_KEY = 'juggling_students_v3';
 const { auth, db } = window.firebaseServices;
 
-async function ensureStudentAuth() {
-  if (auth.currentUser?.isAnonymous) return auth.currentUser;
+function makeStudentEmail(studentInfo) {
+  const clean = value => String(value).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `student.${clean(studentInfo.classCode)}.${clean(studentInfo.grade)}.${clean(studentInfo.classNum)}.${clean(studentInfo.number)}@juggling.local`;
+}
+
+async function ensureStudentAuth(studentInfo) {
+  const email = makeStudentEmail(studentInfo);
+  if (auth.currentUser?.email === email) return auth.currentUser;
   if (auth.currentUser) await auth.signOut();
-  return (await auth.signInAnonymously()).user;
+  try {
+    return (await auth.signInWithEmailAndPassword(email, studentInfo.pin)).user;
+  } catch (signInError) {
+    try {
+      return (await auth.createUserWithEmailAndPassword(email, studentInfo.pin)).user;
+    } catch (createError) {
+      if (createError.code === 'auth/email-already-in-use') {
+        throw new Error('개인 PIN이 일치하지 않습니다. 처음 등록할 때 입력한 PIN 6자리를 확인해주세요.');
+      }
+      throw createError;
+    }
+  }
 }
 
 async function getOrCreateStudent(studentInfo) {
-  const user = await ensureStudentAuth();
+  const user = await ensureStudentAuth(studentInfo);
   const classCode = studentInfo.classCode.trim().toUpperCase();
   const codeSnapshot = await db.collection('classCodes').doc(classCode).get();
   if (!codeSnapshot.exists) throw new Error('학급 코드를 확인해주세요.');
@@ -93,6 +110,42 @@ async function exportAllData() {
   const payload = { app: '집중력up! 저글링수업', version: 4, exportedAt: new Date().toISOString(), classes: payloadClasses };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
   a.href = url; a.download = `저글링수업_백업_${new Date().toISOString().slice(0, 10)}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvCell(value) {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
+async function exportClassCsv(classId) {
+  if (!classId) throw new Error('먼저 학급을 선택해주세요.');
+  const classes = await getTeacherClasses();
+  const teacherClass = classes.find(item => item.id === classId);
+  const students = await getAllStudentData(classId);
+  const headers = ['학년', '반', '번호', '이름', '1단계 완료', '2단계 완료', '3단계 완료', '최고기록', '평균기록'];
+  for (let i = 1; i <= 10; i += 1) headers.push(`${i}회차`);
+  headers.push('핵심가치', '선택한 가치', '가치 선택 이유');
+  const stageTotals = { stage1: 5, stage2: 8, stage3: 17 };
+  const rows = students
+    .sort((a, b) => `${a.grade}-${a.classNum}-${String(a.number).padStart(3, '0')}`.localeCompare(`${b.grade}-${b.classNum}-${String(b.number).padStart(3, '0')}`))
+    .map(student => {
+      const records = student.cascadeRecords || [];
+      const completed = stage => Object.values(student.tasks?.[stage] || {}).filter(Boolean).length;
+      const best = records.length ? Math.max(...records) : 0;
+      const average = records.length ? Math.round(records.reduce((sum, value) => sum + Number(value || 0), 0) / records.length * 10) / 10 : 0;
+      return [student.grade, student.classNum, student.number, student.name,
+        `${completed('stage1')}/${stageTotals.stage1}`, `${completed('stage2')}/${stageTotals.stage2}`, `${completed('stage3')}/${stageTotals.stage3}`,
+        best, average, ...Array.from({ length: 10 }, (_, index) => records[index] ?? ''),
+        student.finalVirtue || '', (student.selectedVirtues || []).join(' · '), student.virtueReason || ''];
+    });
+  const csv = '\ufeff' + [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const safeName = (teacherClass?.name || '학급').replace(/[\\/:*?"<>|]/g, '_');
+  link.href = url;
+  link.download = `${safeName}_저글링기록_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function importAllData() { throw new Error('복원 기능은 다음 업데이트에서 제공됩니다.'); }

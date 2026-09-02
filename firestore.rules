@@ -2,7 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function teacherSignedIn() { return signedIn() && request.auth.token.email != null; }
+    function teacherSignedIn() { return signedIn() && request.auth.token.firebase.sign_in_provider == 'google.com'; }
+    function studentSignedIn() { return signedIn() && request.auth.token.firebase.sign_in_provider == 'password'; }
 
     match /teachers/{teacherId} {
       allow read, create, update: if teacherSignedIn() && request.auth.uid == teacherId;
@@ -10,7 +11,7 @@ service cloud.firestore {
       match /classes/{classId} {
         allow read, write: if teacherSignedIn() && request.auth.uid == teacherId;
         match /students/{studentId} {
-          allow create: if signedIn()
+          allow create: if studentSignedIn()
             && request.auth.uid == studentId
             && request.resource.data.authUid == request.auth.uid
             && request.resource.data.teacherUid == teacherId
@@ -18,9 +19,9 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/classCodes/$(request.resource.data.classCode)).data.teacherUid == teacherId
             && get(/databases/$(database)/documents/classCodes/$(request.resource.data.classCode)).data.classId == classId;
           allow get: if (teacherSignedIn() && request.auth.uid == teacherId)
-            || (signedIn() && request.auth.uid == studentId);
+            || (studentSignedIn() && request.auth.uid == studentId);
           allow update: if (teacherSignedIn() && request.auth.uid == teacherId)
-            || (signedIn() && request.auth.uid == studentId
+            || (studentSignedIn() && request.auth.uid == studentId
               && resource.data.authUid == request.auth.uid
               && request.resource.data.authUid == request.auth.uid
               && request.resource.data.teacherUid == resource.data.teacherUid

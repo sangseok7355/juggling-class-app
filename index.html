@@ -12,7 +12,7 @@
   <section id="login-view" class="card">
     <div style="text-align:center">
       <h1>🤹 집중력up! 저글링수업</h1>
-      <p class="muted">선생님이 알려준 학급 코드로 참여하세요. · 교사별 독립 성장기록</p>
+      <p class="muted">학급 정보와 개인 PIN 6자리를 입력하세요. 다음 수업이나 다른 기기에서도 같은 정보와 PIN으로 이어할 수 있습니다.</p>
     </div>
     <input id="class-code" placeholder="학급 코드 6자리" maxlength="6" style="text-transform:uppercase;font-weight:800;text-align:center;letter-spacing:.16em">
     <div class="grid login-grid">
@@ -20,6 +20,7 @@
       <input id="classNum" placeholder="반">
       <input id="number" placeholder="번호">
       <input id="name" placeholder="이름">
+      <input id="student-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" placeholder="개인 PIN 6자리">
     </div>
     <button id="start-button" class="btn primary" style="width:100%;margin-top:12px">수업 시작하기</button>
     <div class="tools">
@@ -129,6 +130,7 @@
         <div class="share-row"><input id="student-link" readonly><button id="copy-link-button" class="btn primary">주소 복사</button></div>
       </div>
       <div class="tools">
+        <button id="csv-button" class="btn green">학급 기록 CSV</button>
         <button id="backup-button" class="btn primary">백업 파일 저장</button>
         <label class="btn gray" style="cursor:pointer">백업 복원<input id="restore-input" type="file" accept="application/json" class="hidden"></label>
       </div>
