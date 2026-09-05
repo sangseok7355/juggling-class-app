@@ -8,6 +8,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+window.firebaseConfig = firebaseConfig;
 window.firebaseServices = {
   auth: firebase.auth(),
   db: firebase.firestore()
