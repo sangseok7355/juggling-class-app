@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#3b82f6">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=teacher-pin-1">
   <title>집중력up! 저글링수업 - 성장기록 v3</title>
 </head>
 <body>
@@ -44,16 +44,11 @@
 
       <div id="step1-content">
         <div id="multi-virtue-container">
-          <h3>가치 선택</h3>
-          <p class="muted">내 것으로 만들고 싶은 가치 3가지를 선택하고 이유를 적어보세요.</p>
+          <h3>마음가짐 선택</h3>
+          <p class="muted">이번 수업에서 실천하고 싶은 마음가짐 3가지를 선택하고 이유를 적어보세요.</p>
           <div id="virtue-selection-grid" class="virtues"></div>
           <textarea id="virtue-reason" placeholder="선택한 이유를 적어주세요."></textarea>
-          <button id="save-virtue-button" class="btn green" style="width:100%;margin-top:10px">선택한 가치 제출하기</button>
-        </div>
-        <div id="final-virtue-container" class="hidden card">
-          <h3>가장 중요한 가치 선택</h3>
-          <div id="final-virtue-selection-grid" class="final"></div>
-          <button id="save-final-virtue-button" class="btn sky" style="width:100%;margin-top:10px">최종 가치 제출하기</button>
+          <button id="save-virtue-button" class="btn green" style="width:100%;margin-top:10px">마음가짐과 이유 제출하기</button>
         </div>
         <div id="ai-feedback-container" class="hidden"><div id="ai-feedback" class="feedback"></div></div>
       </div>
@@ -117,6 +112,14 @@
     <div class="card">
       <div class="topbar"><h1>📊 교사 대시보드</h1><button id="student-mode-button" class="btn gray">학생 모드</button></div>
       <div id="teacher-account" class="notice">Google 계정으로 로그인했습니다. 각 선생님은 자신의 학급과 학생만 볼 수 있습니다.</div>
+      <div class="teacher-pin-panel">
+        <div>
+          <h3>교사 확인 비밀번호</h3>
+          <p class="muted">학생 활동지의 ‘교사 확인’ 단계에서 사용할 선생님 전용 숫자 6자리입니다.</p>
+          <p id="teacher-pin-status" class="pin-status">설정 상태를 확인하고 있습니다.</p>
+        </div>
+        <div class="share-row"><input id="teacher-pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="새 비밀번호 숫자 6자리"><button id="save-teacher-pin-button" class="btn primary">설정·변경</button></div>
+      </div>
       <h3 style="margin-top:18px">학급 만들기</h3>
       <div class="grid teacher-class-grid">
         <input id="new-class-name" placeholder="학급 이름 (예: 1학년 3반)">
@@ -134,19 +137,20 @@
         <button id="backup-button" class="btn primary">백업 파일 저장</button>
         <label class="btn gray" style="cursor:pointer">백업 복원<input id="restore-input" type="file" accept="application/json" class="hidden"></label>
       </div>
-      <div class="scroll"><table class="dash"><thead><tr><th>학번-이름</th><th>1단계</th><th>2단계</th><th>3단계</th><th>최고기록</th><th>핵심가치</th><th>관리</th></tr></thead><tbody id="dashboard-body"><tr><td colspan="7">학급을 만들거나 선택해주세요.</td></tr></tbody></table></div>
+      <div class="scroll"><table class="dash"><thead><tr><th>학번-이름</th><th>1단계</th><th>2단계</th><th>3단계</th><th>최고기록</th><th>선택한 마음가짐</th><th>관리</th></tr></thead><tbody id="dashboard-body"><tr><td colspan="7">학급을 만들거나 선택해주세요.</td></tr></tbody></table></div>
     </div>
   </section>
 </main>
 
-<div id="password-modal" class="modal hidden"><div class="modal-box"><h3 id="password-modal-title">교사 모드 접속</h3><input type="password" id="password-input" placeholder="비밀번호"><div class="actions"><button id="password-cancel" class="btn gray">취소</button><button id="password-submit" class="btn primary">확인</button></div></div></div>
+<div id="password-modal" class="modal hidden"><div class="modal-box"><h3 id="password-modal-title">교사 확인</h3><p class="muted">선생님이 설정한 교사 확인 비밀번호를 입력해주세요.</p><input type="password" id="password-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="교사 확인 비밀번호 6자리"><div class="actions"><button id="password-cancel" class="btn gray">취소</button><button id="password-submit" class="btn primary">확인</button></div></div></div>
 <div id="delete-confirm-modal" class="modal hidden"><div class="modal-box"><h3>학생 기록 삭제</h3><p><b id="student-to-delete-name"></b> 학생의 기록을 삭제하시겠습니까?</p><div class="actions"><button id="delete-cancel-button" class="btn gray">취소</button><button id="delete-confirm-button" class="btn red">삭제</button></div></div></div>
+<div id="student-pin-reset-modal" class="modal hidden"><div class="modal-box"><h3>학생 PIN 수정</h3><p><b id="student-pin-reset-name"></b> 학생이 다음 로그인부터 사용할 새 PIN을 입력해주세요.</p><input type="password" id="student-new-pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="새 PIN 숫자 6자리"><input type="password" id="student-new-pin-confirm" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" placeholder="새 PIN 한 번 더 입력" style="margin-top:8px"><div class="actions"><button id="student-pin-reset-cancel" class="btn gray">취소</button><button id="student-pin-reset-confirm" class="btn sky">PIN 변경</button></div></div></div>
 
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script src="db.js"></script>
-<script src="app.js"></script>
+<script src="firebase-config.js?v=teacher-pin-1"></script>
+<script src="db.js?v=teacher-pin-1"></script>
+<script src="app.js?v=teacher-pin-1"></script>
 </body>
 </html>
